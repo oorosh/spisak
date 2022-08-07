@@ -44,9 +44,9 @@ async function onFetch(event) {
         // For all navigation requests, try to serve index.html from cache
         // If you need some URLs to be server-rendered, edit the following check to exclude those URLs
 //#if(IndividualLocalAuth && Hosted)
-        const shouldServeIndexHtml = event.request.mode === 'navigate'
-            && !event.request.url.includes('/connect/')
-            && !event.request.url.includes('/Identity/');
+        //const shouldServeIndexHtml = event.request.mode === 'navigate'
+            //&& !event.request.url.includes('/connect/')
+            //&& !event.request.url.includes('/Identity/');
 //#else
         const shouldServeIndexHtml = event.request.mode === 'navigate';
 //#endif
