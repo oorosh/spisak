@@ -1,0 +1,55 @@
+﻿@page "/"
+@inject Blazored.LocalStorage.ILocalStorageService localStorage
+@inject NavigationManager NavigationManager
+
+<PageTitle>Spiskovi</PageTitle>
+<div class="card-body">
+    <div class="add-items d-flex"> <input type="text" class="form-control todo-list-input"
+            placeholder="Ime novog spiska" @bind="checkListName" @onkeypress="AddChecklist"> <button class="add btn btn-primary font-weight-bold todo-list-add-btn" @onclick="AddChecklist">Dodaj</button> </div>
+    <div class="list-wrapper">
+        <ul class="d-flex flex-column-reverse todo-list">
+            @foreach (var list in checkLists)
+            {
+                <li class="menu">
+                    <div class="form-check"> 
+                        <label class="form-check-label" @onclick="e => OpenCheckList(list)"> 
+                        @list.Title
+                        </label>
+                    </div> 
+                    <i class="remove mdi mdi-close-circle-outline" @onclick="e => RemoveChecklist(list)"></i>
+                </li>
+            }
+        </ul>
+    </div>
+</div>
+
+@code {
+    private string? checkListName;
+    private List<CheckListModel> checkLists = new();
+    protected override async Task OnInitializedAsync()
+    {
+        var checkListsFromDb = await localStorage.GetItemAsync<List<CheckListModel>>("checkLists");
+        if (checkListsFromDb != null)
+            checkLists = checkListsFromDb;
+    }
+    private async Task AddChecklist()
+    {
+        if (!string.IsNullOrWhiteSpace(checkListName))
+        {
+            checkLists.Add(new CheckListModel { Title = checkListName, Id = Guid.NewGuid() });
+            await localStorage.SetItemAsync("checkLists", checkLists);
+            checkListName = string.Empty;
+        }
+    }
+
+    private async Task RemoveChecklist(CheckListModel checkList)
+    {
+        checkLists.Remove(checkList);
+        await localStorage.SetItemAsync("checkLists", checkLists);
+    }
+
+    private void OpenCheckList(CheckListModel checkList)
+    {
+        NavigationManager.NavigateTo("checklist/" + checkList.Id);
+    }
+}

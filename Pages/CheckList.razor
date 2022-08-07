@@ -1,0 +1,71 @@
+﻿@page "/checklist/{id:guid}"
+@inject Blazored.LocalStorage.ILocalStorageService localStorage
+
+<PageTitle>@checkList?.Title</PageTitle>
+<div class="card-body">
+    <h4 class="card-title">@checkList?.Title</h4>
+    <div class="add-items d-flex"> <input type="text" class="form-control todo-list-input"
+            placeholder="Dodaj na spisak" @bind="newItemName" @onkeypress="AddTodo"> <button
+            class="add btn btn-primary font-weight-bold todo-list-add-btn" @onclick="AddTodo">Dodaj</button> </div>
+    <div class="list-wrapper">
+        <ul class="d-flex flex-column-reverse todo-list">
+            @if (checkList?.Items != null)
+            {
+                @foreach (var item in checkList.Items)
+                {
+                    <li class="menu @(item.IsDone ? "completed" : "")">
+                        <div class="form-check"> <label class="form-check-label"> <input class="checkbox" type="checkbox"
+                            @bind="item.IsDone" @onclick="e => CheckedTodo(item)" /> @item.Title
+                                <i class="input-helper"></i></label> </div> <i class="remove mdi mdi-close-circle-outline"
+                    @onclick="e => RemoveTodo(item)"></i>
+                    </li>
+                }
+            }
+        </ul>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+    private string? newItemName;
+    protected CheckListModel? checkList = new();
+    protected List<CheckListModel>? allCheckLists = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        allCheckLists = await localStorage.GetItemAsync<List<CheckListModel>>("checkLists");
+        if (allCheckLists != null)
+        {
+            var checkListById = allCheckLists.FirstOrDefault(x => x.Id == Id);
+            if (checkListById != null)
+                checkList = checkListById;
+        }
+    }
+    private async Task AddTodo()
+    {
+        if (!string.IsNullOrWhiteSpace(newItemName))
+        {
+            if(checkList?.Items == null)
+            {
+                checkList.Items = new List<CheckListItemModel>();
+            }
+
+            checkList?.Items.Add(new CheckListItemModel { Title = newItemName });
+                await localStorage.SetItemAsync("checkLists", allCheckLists);
+                newItemName = string.Empty;
+        }
+    }
+
+    private async Task RemoveTodo(CheckListItemModel checkListItem)
+    {
+        checkList?.Items?.Remove(checkListItem);
+        await localStorage.SetItemAsync("checkLists", allCheckLists);
+    }
+
+    private async Task CheckedTodo(CheckListItemModel checkListItem)
+    {
+        checkListItem.IsDone = checkListItem.IsDone ? false : true;
+        await localStorage.SetItemAsync("checkLists", allCheckLists);
+    }
+}
